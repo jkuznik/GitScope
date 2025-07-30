@@ -19,7 +19,10 @@ public class GitHubClient {
                     .headers(headers -> {
                         headers.set(HttpHeaders.ACCEPT, "application/vnd.github+json");
                         if (token != null && !token.isBlank()) {
+                            log.info("Token has been include, trying to fetch private repos");
                             headers.setBearerAuth(token);
+                        } else  {
+                            log.info("Token has not been include, trying to fetch public repos");
                         }
                     })
                     .retrieve()
@@ -27,6 +30,24 @@ public class GitHubClient {
         } catch (Exception e) {
             log.error("Error fetching repos for user '{}': {}", username, e.getMessage());
             throw new RuntimeException("Failed to fetch repositories from GitHub", e);
+        }
+    }
+
+    public String getBranches(String owner, String repo, String token) {
+        try {
+            return restClient.get()
+                    .uri("/repos/{owner}/{repo}/branches", owner, repo)
+                    .headers(headers -> {
+                        headers.set(HttpHeaders.ACCEPT, "application/vnd.github+json");
+                        if (token != null && !token.isBlank()) {
+                            headers.setBearerAuth(token);
+                        }
+                    })
+                    .retrieve()
+                    .body(String.class);
+        } catch (Exception e) {
+            log.error("Error fetching branches for {}/{}: {}", owner, repo, e.getMessage());
+            throw new RuntimeException("Failed to fetch branches from GitHub", e);
         }
     }
 }
