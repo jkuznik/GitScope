@@ -16,21 +16,28 @@ class GitHubClientTest {
     @Autowired
     private GitHubClient gitHubClient;
 
+    private final String username = "jkuznik";
+    private final String expectedRepo = "GitScope";
+    private final String token = null;
+
     @Test
     void getReposByUsername_shouldReturnExpectedRepo() {
-        // given
-        var username = "jkuznik";
-        var expectedRepo = "GitScope";
-
         // when
-        String reposByUsername = gitHubClient.getReposByUsername(username, null);
+        String result = gitHubClient.getReposByUsername(username, token);
 
         // then
-        assertThat(reposByUsername.contains(expectedRepo)).isTrue();
+        assertThat(result.contains(expectedRepo)).isTrue();
     }
 
     @Test
     void getBranches_shouldReturnExpectedBranches() {
+        // given
+        var expectedBranch = "main";
 
+        // when
+        String result = gitHubClient.getBranches(username, expectedRepo, token);
+
+        // then
+        assertThat(result.contains(expectedBranch)).isTrue();
     }
 }
