@@ -3,6 +3,7 @@ package pl.jkuznik.gitscope.infrasctructure.github;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 @Slf4j
@@ -21,12 +22,14 @@ public class GitHubClient {
                         if (token != null && !token.isBlank()) {
                             log.info("Token has been include, trying to fetch private repos");
                             headers.setBearerAuth(token);
-                        } else  {
+                        } else {
                             log.info("Token has not been include, trying to fetch public repos");
                         }
                     })
                     .retrieve()
                     .body(String.class);
+        } catch (HttpClientErrorException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error fetching repos for user '{}': {}", username, e.getMessage());
             throw new RuntimeException("Failed to fetch repositories from GitHub", e);
@@ -45,6 +48,8 @@ public class GitHubClient {
                     })
                     .retrieve()
                     .body(String.class);
+        } catch (HttpClientErrorException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error fetching branches for {}/{}: {}", owner, repo, e.getMessage());
             throw new RuntimeException("Failed to fetch branches from GitHub", e);
