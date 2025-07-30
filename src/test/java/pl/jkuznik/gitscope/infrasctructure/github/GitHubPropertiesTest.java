@@ -12,7 +12,7 @@ class GitHubPropertiesTest {
     private GitHubProperties gitHubProperties;
 
     @Test
-    void getBaseUrl() {
+    void getBaseUrl_ShouldReturnExpectedBaseUrl() {
         // given
         String baseUrl = "https://api.github.com";
 
