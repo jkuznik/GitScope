@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: GitScope
+
+properties:
+  github:
+    base-url: https://api.github.com
