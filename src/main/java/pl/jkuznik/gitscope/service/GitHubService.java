@@ -27,7 +27,7 @@ public class GitHubService {
         try {
             String reposAsString = gitHubClient.getPublicRepos(username);
             JsonNode parsedRepos = objectMapper.readTree(reposAsString);
-            return parseRepositories(parsedRepos, false, null)
+            return parseRepositories(parsedRepos)
                     .stream()
                     .filter(repo -> repo.ownerLogin().equalsIgnoreCase(username))
                     .toList();
@@ -46,7 +46,7 @@ public class GitHubService {
         try {
             String reposAsString = gitHubClient.getPrivateRepos(token);
             JsonNode parsedRepos = objectMapper.readTree(reposAsString);
-            return parseRepositories(parsedRepos, true, token);
+            return parseRepositories(parsedRepos);
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
                 throw new RuntimeException("Unauthorized GitHub token");
@@ -58,7 +58,7 @@ public class GitHubService {
         }
     }
 
-    private List<GitHubRepository> parseRepositories(JsonNode repos, boolean includePrivate, String token) throws Exception {
+    private List<GitHubRepository> parseRepositories(JsonNode repos) {
         List<GitHubRepository> result = new ArrayList<>();
 
         for (JsonNode repo : repos) {
@@ -68,16 +68,14 @@ public class GitHubService {
             String repoName = repo.get("name").asText();
             boolean isPrivate = repo.get("private").asBoolean();
 
-            if (!includePrivate && isPrivate) continue;
-
-            List<GitHubBranch> branches = fetchBranches(ownerLogin, repoName, isPrivate, token);
+            List<GitHubBranch> branches = fetchBranches(ownerLogin, repoName, isPrivate);
             result.add(new GitHubRepository(repoName, ownerLogin, branches));
         }
 
         return result;
     }
 
-    private List<GitHubBranch> fetchBranches(String ownerLogin, String repoName, boolean isPrivate, String token) {
+    private List<GitHubBranch> fetchBranches(String ownerLogin, String repoName, boolean isPrivate) {
         List<GitHubBranch> branches = new ArrayList<>();
 
         try {
