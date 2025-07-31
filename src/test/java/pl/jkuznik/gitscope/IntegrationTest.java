@@ -1,5 +1,6 @@
 package pl.jkuznik.gitscope;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,6 +33,18 @@ public class IntegrationTest {
 
     private static final String TEST_USERNAME = "jkuznik";
     private static final String EXPECTED_REPO = "GitScope";
+
+    @Test
+    void getBaseUrl_ShouldReturnExpectedBaseUrl() {
+        // given
+        String baseUrl = "https://api.github.com";
+
+        // when
+        String result = gitHubProperties.getBaseUrl();
+
+        // then
+        Assertions.assertThat(baseUrl).isEqualTo(result);
+    }
 
     @Test
     void shouldFetchPublicRepositoriesFromGitHubApi() {
@@ -92,7 +105,6 @@ public class IntegrationTest {
 //                .anySatisfy(branch -> assertThat(branch).isEqualTo(expectedBranchInPrivateRepo));
 //    }
 
-
 // TODO: Keep this test disabled until a valid GitHub token with access to any user's private repositories is available.
 
 //    @Test
@@ -123,6 +135,4 @@ public class IntegrationTest {
 //                .flatExtracting(GitHubRepository::branches)
 //                .anySatisfy(branch -> assertThat(branch).isEqualTo(expectedBranchInPrivateRepo));
 //    }
-
-
 }
