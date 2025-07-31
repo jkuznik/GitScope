@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties("properties.github")
 @Getter
 @Setter
-class GitHubProperties {
+public class GitHubProperties {
 
     private String baseUrl;
+    private String token;
 }
