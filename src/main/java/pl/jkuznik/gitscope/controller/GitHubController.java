@@ -16,15 +16,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GitHubController {
 
-    public static final String REPOSITORIES = "/repos";
+    public static final String PUBLIC = "/public";
+    public static final String PRIVATE = "/private";
 
     private final GitHubService gitHubService;
 
-    @GetMapping(REPOSITORIES)
-    public ResponseEntity<List<GitHubRepository>> getRepositories(
-            @RequestParam("username") String username,
-            @RequestHeader(value = "Authorization", required = false) String token
+    @GetMapping(PUBLIC)
+    public ResponseEntity<List<GitHubRepository>> getPublicRepositories(
+            @RequestParam("username") String credentials
     ) {
-        return ResponseEntity.status(HttpStatus.OK).body(gitHubService.getUserRepositories(username, token));
+        return ResponseEntity.status(HttpStatus.OK).body(gitHubService.getReposByUsername(credentials));
+    }
+
+    @GetMapping(PRIVATE)
+    public ResponseEntity<List<GitHubRepository>> getAllRepositories(
+            @RequestHeader("Authorization") String token
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(gitHubService.getAllRepos(token));
     }
 }

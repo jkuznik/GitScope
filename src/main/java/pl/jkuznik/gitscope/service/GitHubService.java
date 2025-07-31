@@ -23,55 +23,84 @@ public class GitHubService {
     private final GitHubClient gitHubClient;
     private final ObjectMapper objectMapper;
 
-    public List<GitHubRepository> getUserRepositories(String username, String token) {
-        List<GitHubRepository> result = new ArrayList<>();
-
+    public List<GitHubRepository> getReposByUsername(String username) {
         try {
-            String reposAsString = gitHubClient.getReposByUsername(username, token);
+            String reposAsString = gitHubClient.getPublicRepos(username);
             JsonNode parsedRepos = objectMapper.readTree(reposAsString);
-
-            for (JsonNode repo : parsedRepos) {
-                if (repo.get("fork").asBoolean()) continue;
-
-                String ownerLogin = repo.get("owner").get("login").asText();
-                if (!ownerLogin.equalsIgnoreCase(username)) continue;
-
-                String repoName = repo.get("name").asText();
-                boolean isPrivate = repo.get("private").asBoolean();
-
-                List<GitHubBranch> branches = new ArrayList<>();
-                if (!isPrivate) {
-                    String branchesAsString = gitHubClient.getBranches(ownerLogin, repoName, token);
-                    JsonNode parsedBranches = objectMapper.readTree(branchesAsString);
-
-                    for (JsonNode branch : parsedBranches) {
-                        String branchName = branch.get("name").asText();
-                        String lastSha = branch.get("commit").get("sha").asText();
-
-                        branches.add(new GitHubBranch(branchName, lastSha));
-                    }
-                } else {
-                    branches.add(new GitHubBranch(
-                            "N/A (private repository)",
-                            "Branch details not accessible"
-                    ));
-                }
-
-                result.add(new GitHubRepository(repoName, ownerLogin, branches));
-            }
-
-            log.info("Retrieved {} repositories", result.size());
+            return parseRepositories(parsedRepos, false, null)
+                    .stream()
+                    .filter(repo -> repo.ownerLogin().equalsIgnoreCase(username))
+                    .toList();
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
                 throw new GitHubUserNotFoundException(username);
-            } else {
-                throw e;
             }
+            throw e;
         } catch (Exception e) {
-            log.error("Failed to fetch repositories or branches for user '{}'", username, e);
-            throw new RuntimeException("Unable to fetch data from GitHub caused unexpected error");
+            log.error("Failed to fetch public repositories for '{}'", username, e);
+            throw new RuntimeException("Unable to fetch data from GitHub");
+        }
+    }
+
+    public List<GitHubRepository> getAllRepos(String token) {
+        try {
+            String reposAsString = gitHubClient.getPrivateRepos(token);
+            JsonNode parsedRepos = objectMapper.readTree(reposAsString);
+            return parseRepositories(parsedRepos, true, token);
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                throw new RuntimeException("Unauthorized GitHub token");
+            }
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to fetch repositories using token", e);
+            throw new RuntimeException("Unable to fetch data from GitHub");
+        }
+    }
+
+    private List<GitHubRepository> parseRepositories(JsonNode repos, boolean includePrivate, String token) throws Exception {
+        List<GitHubRepository> result = new ArrayList<>();
+
+        for (JsonNode repo : repos) {
+            if (repo.get("fork").asBoolean()) continue;
+
+            String ownerLogin = repo.get("owner").get("login").asText();
+            String repoName = repo.get("name").asText();
+            boolean isPrivate = repo.get("private").asBoolean();
+
+            if (!includePrivate && isPrivate) continue;
+
+            List<GitHubBranch> branches = fetchBranches(ownerLogin, repoName, isPrivate, token);
+            result.add(new GitHubRepository(repoName, ownerLogin, branches));
         }
 
         return result;
+    }
+
+    private List<GitHubBranch> fetchBranches(String ownerLogin, String repoName, boolean isPrivate, String token) {
+        List<GitHubBranch> branches = new ArrayList<>();
+
+        try {
+            if (isPrivate) {
+                branches.add(new GitHubBranch(
+                        "N/A (private repository)",
+                        "Branch details not accessible"
+                ));
+            } else {
+                String branchesAsString = gitHubClient.getBranches(ownerLogin, repoName);
+
+                JsonNode parsedBranches = objectMapper.readTree(branchesAsString);
+                for (JsonNode branch : parsedBranches) {
+                    String branchName = branch.get("name").asText();
+                    String lastSha = branch.get("commit").get("sha").asText();
+                    branches.add(new GitHubBranch(branchName, lastSha));
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch branches for repo {}/{}: {}", ownerLogin, repoName, e.getMessage());
+            branches.add(new GitHubBranch("Error", "Failed to fetch branch details"));
+        }
+
+        return branches;
     }
 }

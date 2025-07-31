@@ -15,21 +15,13 @@ public class GitHubClient {
     private final RestClient restClient;
 
     // info source: https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-repositories-for-a-user
-    public String getReposByUsername(String username, String token) {
+    public String getPublicRepos(String username) {
         try {
-            if (withToken(token)) {
-                return restClient.get()
-                        .uri("/user/repos")
-                        .headers(buildHeaders(token))
-                        .retrieve()
-                        .body(String.class);
-            } else {
                 return restClient.get()
                         .uri("/users/{username}/repos", username)
-                        .headers(buildHeaders(token))
+                        .headers(buildHeaders(null))
                         .retrieve()
                         .body(String.class);
-            }
         } catch (HttpClientErrorException e) {
                 throw e;
         } catch (Exception e) {
@@ -38,11 +30,26 @@ public class GitHubClient {
         }
     }
 
-    public String getBranches(String owner, String repo, String token) {
+    public String getPrivateRepos(String token) {
+        try {
+            return restClient.get()
+                    .uri("/user/repos")
+                    .headers(buildHeaders(token))
+                    .retrieve()
+                    .body(String.class);
+        } catch (HttpClientErrorException e) {
+        throw e;
+    } catch (Exception e) {
+        log.error("Error fetching repos with token '{}': {}", token, e.getMessage());
+        throw new RuntimeException("Failed to fetch repositories from GitHub", e);
+    }
+    }
+
+    public String getBranches(String owner, String repo) {
         try {
             return restClient.get()
                     .uri("/repos/{owner}/{repo}/branches", owner, repo)
-                    .headers(buildHeaders(token))
+                    .headers(buildHeaders(null))
                     .retrieve()
                     .body(String.class);
         } catch (HttpClientErrorException e) {
@@ -60,7 +67,7 @@ public class GitHubClient {
             if (withToken(token)) {
                 String cleanToken = token.replaceAll("Bearer", "").trim();
                 headers.setBearerAuth(cleanToken);
-                log.debug("Using cleaned token: {}", cleanToken);
+                log.info("Using cleaned token: {}", cleanToken);
             }
         };
     }

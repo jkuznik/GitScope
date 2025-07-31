@@ -5,3 +5,4 @@ spring:
 properties:
   github:
     base-url: https://api.github.com
+    token:
