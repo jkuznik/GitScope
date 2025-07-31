@@ -1,6 +1,6 @@
-## Zadanie rekrutacyjne
+## Recruitment task
 
-### Treść zadania
+### Description
 
 Acceptance criteria:
 
