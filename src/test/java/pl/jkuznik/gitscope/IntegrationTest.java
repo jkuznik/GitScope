@@ -33,8 +33,6 @@ public class IntegrationTest {
     private static final String TEST_USERNAME = "jkuznik";
     private static final String EXPECTED_REPO = "GitScope";
 
-    private static final String ATIPERA = "PrivateRepoDedicatedToAtipera";
-
     @Test
     void shouldFetchPublicRepositoriesFromGitHubApi() {
         // when
@@ -57,40 +55,74 @@ public class IntegrationTest {
         assertThat(repositories.contains(new GitHubRepository(EXPECTED_REPO, TEST_USERNAME, List.of()))).isTrue();
     }
 
-    @Test
-    void shouldFetchPrivateRepositoriesFromGitHubApi_whenTokenProvided() {
-        // given
-        String token = gitHubProperties.getToken();
+// TODO: Keep this test disabled until a valid GitHub token with access to the 'jkuznik' user's private repositories is provided.
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, "application/vnd.github+json");
-        headers.set("X-GitHub-Api-Version", "2022-11-28");
-        headers.setBearerAuth(token);
-        HttpEntity<Void> request = new HttpEntity<>(headers);
+//    @Test
+//    void shouldFetchPrivateRepositoriesFromGitHubApi_whenTokenProvided_forUser_jkuznik() {
+//        // given
+//        String token = gitHubProperties.getToken();
+//        var ATIPERA = "PrivateRepoDedicatedToAtipera";
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.set(HttpHeaders.ACCEPT, "application/vnd.github+json");
+//        headers.set("X-GitHub-Api-Version", "2022-11-28");
+//        headers.setBearerAuth(token);
+//        HttpEntity<Void> request = new HttpEntity<>(headers);
+//
+//        var expectedBranchInPrivateRepo = new GitHubBranch("N/A (private repository)", "Branch details not accessible");
+//
+//        // when
+//        ResponseEntity<List<GitHubRepository>> result = restTemplate.exchange(
+//                "http://localhost:" + port + PRIVATE,
+//                HttpMethod.GET,
+//                request,
+//                new ParameterizedTypeReference<>() {}
+//        );
+//
+//        // then
+//        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+//
+//        assertThat(result.getBody())
+//                .isNotNull()
+//                .isNotEmpty()
+//                .anySatisfy(repo -> assertThat(repo.repositoryName()).isEqualTo(ATIPERA));
+//
+//        assertThat(result.getBody())
+//                .flatExtracting(GitHubRepository::branches)
+//                .anySatisfy(branch -> assertThat(branch).isEqualTo(expectedBranchInPrivateRepo));
+//    }
 
-        var expectedBranchInPrivateRepo = new GitHubBranch("N/A (private repository)", "Branch details not accessible");
 
-        // when
-        ResponseEntity<List<GitHubRepository>> result = restTemplate.exchange(
-                "http://localhost:" + port + PRIVATE,
-                HttpMethod.GET,
-                request,
-                new ParameterizedTypeReference<>() {}
-        );
+// TODO: Keep this test disabled until a valid GitHub token with access to any user's private repositories is available.
 
-        // then
-        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        assertThat(result.getBody())
-                .isNotNull()
-                .isNotEmpty()
-                .anySatisfy(repo -> assertThat(repo.repositoryName()).isEqualTo(ATIPERA));
-
-        assertThat(result.getBody())
-                .flatExtracting(GitHubRepository::branches)
-                .anySatisfy(branch -> assertThat(branch).isEqualTo(expectedBranchInPrivateRepo));
-
-    }
+//    @Test
+//    void shouldFetchPrivateRepositoriesFromGitHubApi_whenTokenProvided() {
+//        // given
+//        String token = gitHubProperties.getToken();
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.set(HttpHeaders.ACCEPT, "application/vnd.github+json");
+//        headers.set("X-GitHub-Api-Version", "2022-11-28");
+//        headers.setBearerAuth(token);
+//        HttpEntity<Void> request = new HttpEntity<>(headers);
+//
+//        var expectedBranchInPrivateRepo = new GitHubBranch("N/A (private repository)", "Branch details not accessible");
+//
+//        // when
+//        ResponseEntity<List<GitHubRepository>> result = restTemplate.exchange(
+//                "http://localhost:" + port + PRIVATE,
+//                HttpMethod.GET,
+//                request,
+//                new ParameterizedTypeReference<>() {}
+//        );
+//
+//        // then
+//        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+//
+//        assertThat(result.getBody())
+//                .flatExtracting(GitHubRepository::branches)
+//                .anySatisfy(branch -> assertThat(branch).isEqualTo(expectedBranchInPrivateRepo));
+//    }
 
 
 }
