@@ -6,17 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import pl.jkuznik.gitscope.infrasctructure.github.GitHubProperties;
-import pl.jkuznik.gitscope.model.github.GitHubBranch;
 import pl.jkuznik.gitscope.model.github.GitHubRepository;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static pl.jkuznik.gitscope.controller.GitHubController.PRIVATE;
 import static pl.jkuznik.gitscope.controller.GitHubController.PUBLIC;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -98,7 +95,7 @@ public class IntegrationTest {
 //        assertThat(result.getBody())
 //                .isNotNull()
 //                .isNotEmpty()
-//                .anySatisfy(repo -> assertThat(repo.repositoryName()).isEqualTo(ATIPERA));
+//                .anySatisfy(repo -> assertThat(repo.name()).isEqualTo(ATIPERA));
 //
 //        assertThat(result.getBody())
 //                .flatExtracting(GitHubRepository::branches)

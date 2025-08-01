@@ -1,7 +1,5 @@
 package pl.jkuznik.gitscope.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,16 +19,13 @@ import java.util.List;
 public class GitHubService {
 
     private final GitHubClient gitHubClient;
-    private final ObjectMapper objectMapper;
 
     public List<GitHubRepository> getReposByUsername(String username) {
         try {
-            String reposAsString = gitHubClient.getPublicRepos(username);
-            JsonNode parsedRepos = objectMapper.readTree(reposAsString);
-            return parseRepositories(parsedRepos)
-                    .stream()
-                    .filter(repo -> repo.ownerLogin().equalsIgnoreCase(username))
-                    .toList();
+            List<GitHubRepository> publicRepos = gitHubClient.getPublicRepos(username);
+            return parseRepositories(publicRepos.stream()
+                    .filter(repo -> repo.owner().login().equalsIgnoreCase(username))
+                    .toList());
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
                 throw new GitHubUserNotFoundException(username);
@@ -44,9 +39,8 @@ public class GitHubService {
 
     public List<GitHubRepository> getAllRepos(String token) {
         try {
-            String reposAsString = gitHubClient.getPrivateRepos(token);
-            JsonNode parsedRepos = objectMapper.readTree(reposAsString);
-            return parseRepositories(parsedRepos);
+            List<GitHubRepository> privateRepos = gitHubClient.getPrivateRepos(token);
+            return parseRepositories(privateRepos);
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
                 throw new RuntimeException("Unauthorized GitHub token");
@@ -58,19 +52,15 @@ public class GitHubService {
         }
     }
 
-    private List<GitHubRepository> parseRepositories(JsonNode repos) {
+    private List<GitHubRepository> parseRepositories(List<GitHubRepository> repos) {
         List<GitHubRepository> result = new ArrayList<>();
 
-        for (JsonNode repo : repos) {
-            if (repo.get("fork").asBoolean()) continue;
-
-            String ownerLogin = repo.get("owner").get("login").asText();
-            String repoName = repo.get("name").asText();
-            boolean isPrivate = repo.get("private").asBoolean();
-
-            List<GitHubBranch> branches = fetchBranches(ownerLogin, repoName, isPrivate);
-            result.add(new GitHubRepository(repoName, ownerLogin, branches));
-        }
+        repos.stream()
+                .filter(repo -> !repo.fork())
+                .forEach(repo -> {
+                    List<GitHubBranch> branches = fetchBranches(repo.owner().login(), repo.name(), repo.isPrivate());
+                    result.add(new GitHubRepository(repo.name(), repo.owner(), repo.fork(), repo.isPrivate(), branches));
+                });
 
         return result;
     }
@@ -82,21 +72,18 @@ public class GitHubService {
             if (isPrivate) {
                 branches.add(new GitHubBranch(
                         "N/A (private repository)",
-                        "Branch details not accessible"
+                        new GitHubBranch.Commit("Branch details not accessible")
                 ));
             } else {
-                String branchesAsString = gitHubClient.getBranches(ownerLogin, repoName);
+                List<GitHubBranch> retrievedBranches = gitHubClient.getBranches(ownerLogin, repoName);
 
-                JsonNode parsedBranches = objectMapper.readTree(branchesAsString);
-                for (JsonNode branch : parsedBranches) {
-                    String branchName = branch.get("name").asText();
-                    String lastSha = branch.get("commit").get("sha").asText();
-                    branches.add(new GitHubBranch(branchName, lastSha));
-                }
+                retrievedBranches.forEach(branch -> {
+                    branches.add(new GitHubBranch(branch.name(), branch.commit()));
+                });
             }
         } catch (Exception e) {
             log.warn("Failed to fetch branches for repo {}/{}: {}", ownerLogin, repoName, e.getMessage());
-            branches.add(new GitHubBranch("Error", "Failed to fetch branch details"));
+            branches.add(new GitHubBranch("Error", new GitHubBranch.Commit("Failed to fetch branch details")));
         }
 
         return branches;
