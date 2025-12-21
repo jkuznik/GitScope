@@ -59,10 +59,10 @@ public class IntegrationTest {
         List<GitHubRepository> repositories = Arrays.asList(response.getBody());
 
         repositories.forEach(repo -> {
-            assertThat(repo.ownerLogin()).isEqualTo(TEST_USERNAME);
+            assertThat(repo.owner().login()).isEqualTo(TEST_USERNAME);
         });
 
-        assertThat(repositories.contains(new GitHubRepository(EXPECTED_REPO, TEST_USERNAME, List.of()))).isTrue();
+        assertThat(repositories.contains(new GitHubRepository(EXPECTED_REPO, new GitHubRepository.Owner(TEST_USERNAME), true, true, List.of()))).isTrue();
     }
 
 // TODO: Keep this test disabled until a valid GitHub token with access to the 'jkuznik' user's private repositories is provided.
