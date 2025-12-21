@@ -1,5 +1,7 @@
 package pl.jkuznik.gitscope.model.github;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -7,6 +9,7 @@ public record GitHubRepository(
         String name,
         Owner owner,
         boolean fork,
+        @JsonProperty("private")
         boolean isPrivate,
         List<GitHubBranch> branches
 
