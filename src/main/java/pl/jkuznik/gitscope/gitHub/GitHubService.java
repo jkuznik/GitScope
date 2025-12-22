@@ -1,14 +1,11 @@
-package pl.jkuznik.gitscope.service;
+package pl.jkuznik.gitscope.gitHub;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import pl.jkuznik.gitscope.exception.GitHubUserNotFoundException;
-import pl.jkuznik.gitscope.infrasctructure.github.GitHubClient;
-import pl.jkuznik.gitscope.model.github.GitHubBranch;
-import pl.jkuznik.gitscope.model.github.GitHubRepository;
+import pl.jkuznik.gitscope.gitHub.GitHubRepositoryModel.GitHubBranch;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,14 +13,14 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GitHubService {
+class GitHubService {
 
     private final GitHubClient gitHubClient;
 
-    public List<GitHubRepository> getReposByUsername(String username) {
+    public List<GitHubRepositoryModel> getPublicReposByUsername(String username) {
         try {
-            List<GitHubRepository> publicRepos = gitHubClient.getPublicRepos(username);
-            return parseRepositories(publicRepos.stream()
+            List<GitHubRepositoryModel> publicRepos = gitHubClient.getPublicRepos(username);
+            return filterForkRepositories(publicRepos.stream()
                     .filter(repo -> repo.owner().login().equalsIgnoreCase(username))
                     .toList());
         } catch (HttpClientErrorException e) {
@@ -37,10 +34,10 @@ public class GitHubService {
         }
     }
 
-    public List<GitHubRepository> getAllRepos(String token) {
+    public List<GitHubRepositoryModel> getAllReposByToken(String token) {
         try {
-            List<GitHubRepository> privateRepos = gitHubClient.getPrivateRepos(token);
-            return parseRepositories(privateRepos);
+            List<GitHubRepositoryModel> privateRepos = gitHubClient.getPrivateRepos(token);
+            return filterForkRepositories(privateRepos);
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
                 throw new RuntimeException("Unauthorized GitHub token");
@@ -52,14 +49,14 @@ public class GitHubService {
         }
     }
 
-    private List<GitHubRepository> parseRepositories(List<GitHubRepository> repos) {
-        List<GitHubRepository> result = new ArrayList<>();
+    private List<GitHubRepositoryModel> filterForkRepositories(List<GitHubRepositoryModel> repos) {
+        List<GitHubRepositoryModel> result = new ArrayList<>();
 
         repos.stream()
                 .filter(repo -> !repo.fork())
                 .forEach(repo -> {
                     List<GitHubBranch> branches = fetchBranches(repo.owner().login(), repo.name(), repo.isPrivate());
-                    result.add(new GitHubRepository(repo.name(), repo.owner(), repo.fork(), repo.isPrivate(), branches));
+                    result.add(new GitHubRepositoryModel(repo.name(), repo.owner(), false, repo.isPrivate(), branches));
                 });
 
         return result;

@@ -1,26 +1,32 @@
-package pl.jkuznik.gitscope.infrasctructure.github;
+package pl.jkuznik.gitscope.gitHub;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
-import pl.jkuznik.gitscope.model.github.GitHubBranch;
-import pl.jkuznik.gitscope.model.github.GitHubRepository;
+import pl.jkuznik.gitscope.gitHub.GitHubRepositoryModel.GitHubBranch;
 
 import java.util.List;
 import java.util.function.Consumer;
 
 @Slf4j
 @RequiredArgsConstructor
-public class GitHubClient {
+class GitHubClient {
 
     private final RestClient restClient;
 
     // info source: https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-repositories-for-a-user
-    public List<GitHubRepository> getPublicRepos(String username) {
+    public List<GitHubRepositoryModel> getPublicRepos(String username) {
         try {
                 return restClient.get()
                         .uri("/users/{username}/repos", username)
@@ -36,7 +42,8 @@ public class GitHubClient {
         }
     }
 
-    public List<GitHubRepository> getPrivateRepos(String token) {
+    // info source: https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-repositories-for-a-user
+    public List<GitHubRepositoryModel> getPrivateRepos(String token) {
         try {
             return restClient.get()
                     .uri("/user/repos")
@@ -82,4 +89,32 @@ public class GitHubClient {
     private boolean withToken(String token) {
         return token != null && !token.isBlank();
     }
+}
+
+@Configuration
+@EnableConfigurationProperties(GitHubProperties.class)
+@RequiredArgsConstructor
+class GitHubConfig {
+
+    private final GitHubProperties gitHubProperties;
+
+    @Bean
+    public GitHubClient gitHubClient() {
+        RestClient restClient =
+                RestClient.builder()
+                        .baseUrl(gitHubProperties.getBaseUrl())
+                        .build();
+
+        return new GitHubClient(restClient);
+    }
+}
+
+@Component
+@ConfigurationProperties("properties.github")
+@Getter
+@Setter
+class GitHubProperties {
+
+    private String baseUrl;
+    private String token;
 }
