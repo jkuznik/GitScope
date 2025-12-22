@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import pl.jkuznik.gitscope.model.github.GitHubBranch;
@@ -24,6 +25,7 @@ public class GitHubClient {
                 return restClient.get()
                         .uri("/users/{username}/repos", username)
                         .headers(buildHeaders(null))
+                        .accept(MediaType.APPLICATION_JSON)
                         .retrieve()
                         .body(new ParameterizedTypeReference<>() {});
         } catch (HttpClientErrorException e) {
@@ -39,6 +41,7 @@ public class GitHubClient {
             return restClient.get()
                     .uri("/user/repos")
                     .headers(buildHeaders(token))
+                    .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .body(new ParameterizedTypeReference<>() {});
         } catch (HttpClientErrorException e) {
