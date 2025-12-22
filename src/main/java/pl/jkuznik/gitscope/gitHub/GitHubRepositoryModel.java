@@ -1,11 +1,11 @@
-package pl.jkuznik.gitscope.model.github;
+package pl.jkuznik.gitscope.gitHub;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 import java.util.Objects;
 
-public record GitHubRepository(
+record GitHubRepositoryModel(
         String name,
         Owner owner,
         boolean fork,
@@ -17,7 +17,7 @@ public record GitHubRepository(
 ) {
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof GitHubRepository that)) return false;
+        if (!(o instanceof GitHubRepositoryModel that)) return false;
         return Objects.equals(name(), that.name()) && Objects.equals(owner(), that.owner());
     }
 
@@ -26,7 +26,7 @@ public record GitHubRepository(
         return Objects.hash(name(), owner());
     }
 
-    public record Owner(String login) {
+    record Owner(String login) {
 
         @Override
         public boolean equals(Object o) {
@@ -37,6 +37,14 @@ public record GitHubRepository(
         @Override
         public int hashCode() {
             return Objects.hashCode(login());
+        }
+    }
+
+    record GitHubBranch(
+            String name,
+            Commit commit
+    ) {
+        record Commit(String sha) {
         }
     }
 }

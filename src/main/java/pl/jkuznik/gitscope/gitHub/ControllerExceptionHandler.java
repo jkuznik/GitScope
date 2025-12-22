@@ -1,4 +1,4 @@
-package pl.jkuznik.gitscope.exception;
+package pl.jkuznik.gitscope.gitHub;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @ControllerAdvice
-public class ControllerExceptionHandler {
+class ControllerExceptionHandler {
 
     @ExceptionHandler(GitHubUserNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleUserNotFoundException(GitHubUserNotFoundException ex) {
