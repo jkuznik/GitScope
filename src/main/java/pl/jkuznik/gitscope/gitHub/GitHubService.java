@@ -55,8 +55,18 @@ class GitHubService {
         repos.stream()
                 .filter(repo -> !repo.fork())
                 .forEach(repo -> {
-                    List<GitHubBranch> branches = fetchBranches(repo.owner().login(), repo.name(), repo.isPrivate());
-                    result.add(new GitHubRepositoryModel(repo.name(), repo.owner(), false, repo.isPrivate(), branches));
+                    List<GitHubBranch> branches = fetchBranches(
+                            repo.owner().login(),
+                            repo.name(),
+                            repo.isPrivate()
+                    );
+
+                    result.add(new GitHubRepositoryModel(
+                            repo.name(),
+                            repo.owner(),
+                            false,
+                            repo.isPrivate(),
+                            branches));
                 });
 
         return result;
@@ -75,7 +85,10 @@ class GitHubService {
                 List<GitHubBranch> retrievedBranches = gitHubClient.getBranches(ownerLogin, repoName);
 
                 retrievedBranches.forEach(branch -> {
-                    branches.add(new GitHubBranch(branch.name(), branch.commit()));
+                    branches.add(new GitHubBranch(
+                            branch.name(),
+                            branch.commit()
+                    ));
                 });
             }
         } catch (Exception e) {
