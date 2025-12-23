@@ -25,7 +25,7 @@ class GitHubService {
                     .toList());
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-                throw new GitHubUserNotFoundException(username);
+                throw new GitHubException.UsernameNotFound(username);
             }
             throw e;
         } catch (Exception e) {
@@ -40,7 +40,7 @@ class GitHubService {
             return filterForkRepositories(privateRepos);
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                throw new RuntimeException("Unauthorized GitHub token");
+                throw new GitHubException.Unauthorized("Unauthorized GitHub token");
             }
             throw e;
         } catch (Exception e) {
