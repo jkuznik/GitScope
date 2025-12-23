@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -12,20 +13,20 @@ import java.util.Map;
 @ControllerAdvice
 class ControllerExceptionHandler {
 
-    @ExceptionHandler(GitHubUserNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleUserNotFoundException(GitHubUserNotFoundException ex) {
+    @ExceptionHandler(GitHubException.UsernameNotFound.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotFoundException(GitHubException.UsernameNotFound ex) {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("status", HttpStatus.NOT_FOUND.value());
         response.put("message", ex.getMessage());
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(HttpClientErrorException.Forbidden.class)
-    public ResponseEntity<Map<String, Object>> handleRateLimitExceeded(HttpClientErrorException.Forbidden ex) {
+    @ExceptionHandler(GitHubException.Unauthorized.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitExceeded(GitHubException.Unauthorized ex) {
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("status", HttpStatus.FORBIDDEN.value());
+        response.put("status", HttpStatus.UNAUTHORIZED.value());
         response.put("message", ex.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(Exception.class)

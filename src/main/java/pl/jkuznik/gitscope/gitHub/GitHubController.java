@@ -21,9 +21,9 @@ class GitHubController {
 
     @GetMapping(PUBLIC)
     public ResponseEntity<List<GitHubRepositoryModel>> getPublicRepositories(
-            @RequestParam("username") String credentials
+            @RequestParam("username") String username
     ) {
-        return ResponseEntity.status(HttpStatus.OK).body(gitHubService.getPublicReposByUsername(credentials));
+        return ResponseEntity.status(HttpStatus.OK).body(gitHubService.getPublicReposByUsername(username));
     }
 
     @GetMapping(PRIVATE)
